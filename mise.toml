@@ -1,0 +1,94 @@
+# mise 配置：统一管理工具链版本与项目命令
+# 版本必须固定具体版本（禁止 latest / 宽松范围），保证环境可复现。
+# 优先使用 `mise run <task>`，而非直接调用底层命令。
+
+[tools]
+node = "24.16.0"
+yarn = "1.22.22"
+
+[env]
+# 让 node_modules/.bin 进入 PATH，task 内可直接调用本地二进制（nodemon/tsx/electronmon 等）
+_.path = ["node_modules/.bin"]
+
+# ---------------------------------------------------------------------------
+# 依赖安装：一条命令装齐项目运行所需的全部依赖
+# ---------------------------------------------------------------------------
+[tasks.install]
+description = "安装/更新项目依赖（yarn）"
+run = "yarn install"
+
+# ---------------------------------------------------------------------------
+# 启动：本项目有多种运行形态，按场景拆成独立 task（互斥，按需启其一）
+# ---------------------------------------------------------------------------
+[tasks.dev]
+description = "纯后端开发模式（nodemon + tsx 直跑 src/app.ts），监听 10588 端口"
+run = "nodemon --inspect --exec tsx src/app.ts"
+
+[tasks.gui]
+description = "启动 Electron 桌面壳（前端从 data/web 静态加载）"
+run = "electronmon -r tsx scripts/main.ts"
+
+[tasks.gui-vite]
+description = "启动 Electron 桌面壳，前端从 http://localhost:50188 的 Vite dev server 加载（需另行启动前端）"
+env = { VITE_DEV = "1" }
+run = "electronmon -r tsx scripts/main.ts"
+
+# ---------------------------------------------------------------------------
+# 质量与构建
+# ---------------------------------------------------------------------------
+[tasks.lint]
+description = "类型检查（tsc --noEmit），本项目即以此为 lint"
+run = "tsc --noEmit"
+
+[tasks.build]
+description = "用 esbuild 打包：src/app.ts → data/serve/app.js，scripts/main.ts → build/main.js"
+env = { NODE_ENV = "prod" }
+run = "tsx scripts/build.ts"
+
+[tasks.start]
+description = "以 prod 模式运行已打包的 data/serve/app.js"
+env = { NODE_ENV = "prod" }
+run = "node data/serve/app.js"
+
+# ---------------------------------------------------------------------------
+# 打包出包（electron-builder）
+# ---------------------------------------------------------------------------
+[tasks.pack]
+description = "只打 --dir（不出安装包），用于本地验证 Electron 打包结果"
+depends = ["build"]
+run = "electron-builder --dir"
+
+[tasks.dist]
+description = "build 后用 electron-builder 出当前平台安装包"
+depends = ["build"]
+run = "electron-builder"
+
+[tasks."dist-win"]
+description = "build 后出 Windows 安装包"
+depends = ["build"]
+run = "electron-builder --win"
+
+[tasks."dist-mac"]
+description = "build 后出 macOS 安装包"
+depends = ["build"]
+run = "electron-builder --mac"
+
+[tasks."dist-linux"]
+description = "build 后出 Linux 安装包"
+depends = ["build"]
+run = "electron-builder --linux"
+
+# ---------------------------------------------------------------------------
+# 其它辅助
+# ---------------------------------------------------------------------------
+[tasks.vendor2json]
+description = "把 data/vendor/*.ts 供应商模板转成 JSON"
+run = "node scripts/vendor2json.ts"
+
+[tasks."debug-ai"]
+description = "启动 @ai-sdk/devtools，调试 Vercel AI SDK 流式调用"
+run = "npx @ai-sdk/devtools"
+
+[tasks.license]
+description = "生成第三方依赖许可清单 → NOTICES.txt"
+run = "node scripts/license.ts"

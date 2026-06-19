@@ -31,6 +31,13 @@ report.[0-9]_.[0-9]_.[0-9]_.[0-9]_.json
 # IntelliJ based IDEs
 .idea
 
+# Claude Code 本地配置
+.claude
+
+# mise 本地覆盖（个人机器特定配置，不提交）
+mise.local.toml
+.mise.local.toml
+
 # Finder (MacOS) folder config
 .DS_Store
 

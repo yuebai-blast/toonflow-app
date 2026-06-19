@@ -11,22 +11,27 @@ Toonflow 是一款 AI 短剧/漫剧创作工具：把小说自动改编为剧本
 
 ## 常用命令
 
+工具链与命令统一用 **mise** 管理（版本锁在 `mise.toml` 的 `[tools]`，命令是 `[tasks.*]`）。
+本地开发**优先用 `mise run <task>`**；下表右侧括号是其底层实际执行（package.json scripts 仍保留，供 Docker / CI 调用）。
+
 | 命令 | 说明 |
 | --- | --- |
-| `yarn dev` | 纯后端开发模式（nodemon + tsx 直跑 `src/app.ts`），监听 `10588` 端口 |
-| `yarn dev:gui` | 启动 Electron 桌面壳（`electronmon -r tsx scripts/main.ts`） |
-| `yarn dev:gui-vite` | 同上，但前端从 `http://localhost:50188` 的 Vite dev server 加载（需另行启动前端） |
-| `yarn lint` | 类型检查（`tsc --noEmit`），本项目没有 ESLint，这条就是“lint” |
-| `yarn build` | 用 esbuild 打包：`src/app.ts → data/serve/app.js`，`scripts/main.ts → build/main.js` |
-| `yarn start` | 以 prod 模式运行已打包的 `data/serve/app.js` |
-| `yarn dist` / `dist:win` / `dist:mac` / `dist:linux` | 先 build 再用 electron-builder 出安装包 |
-| `yarn pack` | 只打 `--dir`（不出安装包），用于本地验证 Electron 打包结果 |
-| `yarn vendor2json` | 把 `data/vendor/*.ts` 供应商模板转成 JSON（见 `scripts/vendor2json.ts`） |
-| `yarn debug:ai` | 启动 `@ai-sdk/devtools`，调试 Vercel AI SDK 的流式调用 |
-| `yarn license` | 生成第三方依赖许可清单（`scripts/license.ts` → `NOTICES.txt`） |
+| `mise run install` | 安装/更新全部依赖（底层 `yarn install`） |
+| `mise run dev` | 纯后端开发模式（nodemon + tsx 直跑 `src/app.ts`），监听 `10588` 端口 |
+| `mise run gui` | 启动 Electron 桌面壳（`electronmon -r tsx scripts/main.ts`） |
+| `mise run gui-vite` | 同上，但前端从 `http://localhost:50188` 的 Vite dev server 加载（需另行启动前端） |
+| `mise run lint` | 类型检查（`tsc --noEmit`），本项目没有 ESLint，这条就是“lint” |
+| `mise run build` | 用 esbuild 打包：`src/app.ts → data/serve/app.js`，`scripts/main.ts → build/main.js` |
+| `mise run start` | 以 prod 模式运行已打包的 `data/serve/app.js` |
+| `mise run dist` / `dist-win` / `dist-mac` / `dist-linux` | 先 build 再用 electron-builder 出安装包 |
+| `mise run pack` | 只打 `--dir`（不出安装包），用于本地验证 Electron 打包结果 |
+| `mise run vendor2json` | 把 `data/vendor/*.ts` 供应商模板转成 JSON（见 `scripts/vendor2json.ts`） |
+| `mise run debug-ai` | 启动 `@ai-sdk/devtools`，调试 Vercel AI SDK 的流式调用 |
+| `mise run license` | 生成第三方依赖许可清单（`scripts/license.ts` → `NOTICES.txt`） |
 
 - **没有测试框架**，不存在单测命令。
-- Docker（见 `Dockerfile`）只跑后端：安装前会剥离 electron 相关依赖，最终 `yarn dev` 监听 10588。
+- CI（`.github/workflows/`）与 Docker（`Dockerfile`）目前仍直接调用 `yarn`（如 `yarn dist:win --x64` 需透传架构参数），未走 mise；两套命令一一对应，改任一侧记得同步。
+- Docker 只跑后端：安装前会剥离 electron 相关依赖，最终 `yarn dev` 监听 10588。
 
 ## 运行形态与启动链路
 
