@@ -11,9 +11,6 @@ on:
         required: false
         type: string
 
-env:
-  NODE_VERSION: "24"
-
 jobs:
   # ==================== Windows 构建 ====================
   build-Windows:
@@ -33,16 +30,14 @@ jobs:
       - name: 检出代码
         uses: actions/checkout@v4
 
-      - name: 配置 Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
+      - name: 安装 mise（按 mise.toml 装好 node/yarn）
+        uses: jdx/mise-action@v2
 
       - name: 安装依赖
-        run: yarn install --frozen-lockfile
+        run: mise run install --frozen-lockfile
 
       - name: 打包 Windows 安装程序
-        run: yarn dist:win --${{ matrix.arch }}
+        run: mise run dist-win --${{ matrix.arch }}
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -73,13 +68,11 @@ jobs:
       - name: 检出代码
         uses: actions/checkout@v4
 
-      - name: 配置 Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
+      - name: 安装 mise（按 mise.toml 装好 node/yarn）
+        uses: jdx/mise-action@v2
 
       - name: 安装依赖
-        run: yarn install --frozen-lockfile
+        run: mise run install --frozen-lockfile
         env:
           npm_config_arch: ${{ matrix.arch }}
 
@@ -89,7 +82,7 @@ jobs:
           npm install --no-save --ignore-scripts --force @img/sharp-darwin-x64 @img/sharp-libvips-darwin-x64
 
       - name: 打包 macOS 安装程序
-        run: yarn dist:mac --${{ matrix.arch }}
+        run: mise run dist-mac --${{ matrix.arch }}
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -118,13 +111,11 @@ jobs:
       - name: 检出代码
         uses: actions/checkout@v4
 
-      - name: 配置 Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
+      - name: 安装 mise（按 mise.toml 装好 node/yarn）
+        uses: jdx/mise-action@v2
 
       - name: 安装依赖
-        run: yarn install --frozen-lockfile
+        run: mise run install --frozen-lockfile
         env:
           npm_config_arch: ${{ matrix.arch }}
 
@@ -134,7 +125,7 @@ jobs:
           npm install --no-save --ignore-scripts --force @img/sharp-linux-arm64 @img/sharp-libvips-linux-arm64
 
       - name: 打包 Linux 安装程序
-        run: yarn dist:linux --${{ matrix.arch }}
+        run: mise run dist-linux --${{ matrix.arch }}
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 

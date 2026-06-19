@@ -11,12 +11,13 @@ Toonflow 是一款 AI 短剧/漫剧创作工具：把小说自动改编为剧本
 
 ## 常用命令
 
-工具链与命令统一用 **mise** 管理（版本锁在 `mise.toml` 的 `[tools]`，命令是 `[tasks.*]`）。
-本地开发**优先用 `mise run <task>`**；下表右侧括号是其底层实际执行（package.json scripts 仍保留，供 Docker / CI 调用）。
+工具链与命令统一用 **mise** 管理（版本锁在 `mise.toml` 的 `[tools]`：node / yarn 固定版本；命令是 `[tasks.*]`）。
+本地开发、CI（`.github/workflows/`）、Docker 全部走 mise，node/yarn 版本只在 `mise.toml` 一处维护。
+**优先用 `mise run <task>`**；下表右侧括号是其底层实际执行（`package.json` scripts 仍保留作为底层实现）。
 
 | 命令 | 说明 |
 | --- | --- |
-| `mise run install` | 安装/更新全部依赖（底层 `yarn install`） |
+| `mise run install` | 安装/更新全部依赖（底层 `yarn install`；CI 用 `mise run install --frozen-lockfile` 透传锁定） |
 | `mise run dev` | 纯后端开发模式（nodemon + tsx 直跑 `src/app.ts`），监听 `10588` 端口 |
 | `mise run gui` | 启动 Electron 桌面壳（`electronmon -r tsx scripts/main.ts`） |
 | `mise run gui-vite` | 同上，但前端从 `http://localhost:50188` 的 Vite dev server 加载（需另行启动前端） |
@@ -30,8 +31,8 @@ Toonflow 是一款 AI 短剧/漫剧创作工具：把小说自动改编为剧本
 | `mise run license` | 生成第三方依赖许可清单（`scripts/license.ts` → `NOTICES.txt`） |
 
 - **没有测试框架**，不存在单测命令。
-- CI（`.github/workflows/`）与 Docker（`Dockerfile`）目前仍直接调用 `yarn`（如 `yarn dist:win --x64` 需透传架构参数），未走 mise；两套命令一一对应，改任一侧记得同步。
-- Docker 只跑后端：安装前会剥离 electron 相关依赖，最终 `yarn dev` 监听 10588。
+- CI 通过 `jdx/mise-action` 装好工具链后调 `mise run dist-win --x64` 等（mise 会把多出的 `--x64` 透传给 electron-builder）。
+- Docker（`Dockerfile`）基于 `debian:bookworm-slim` 自行装 mise，node/yarn 同样取自 `mise.toml`；只跑后端，安装前剥离 electron 相关依赖，最终 `mise run dev` 监听 10588。
 
 ## 运行形态与启动链路
 
